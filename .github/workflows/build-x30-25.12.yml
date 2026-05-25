@@ -74,6 +74,31 @@ jobs:
             fi
           done
 
+          if grep -q 'compatible = "totolink,X30", "mediatek,mt7981";' patches/0001-mediatek-add-TOTOLINK-X30-support.patch; then
+            echo "ERROR: Patch 0001 still contains the broken uppercase Linux DTS compatible string."
+            exit 1
+          fi
+
+          if ! grep -q 'compatible = "totolink,x30", "mediatek,mt7981";' patches/0001-mediatek-add-TOTOLINK-X30-support.patch; then
+            echo "ERROR: Patch 0001 does not contain the fixed lowercase Linux DTS compatible string."
+            exit 1
+          fi
+
+          if ! grep -q 'SUPPORTED_DEVICES := totolink,X30 totolink,x30' patches/0001-mediatek-add-TOTOLINK-X30-support.patch; then
+            echo "ERROR: Patch 0001 does not contain both legacy and fixed supported-device names."
+            exit 1
+          fi
+
+          if ! grep -q 'totolink,X30' patches/0002-mediatek-filogic-add-totolink-x30-fit-upgrade.patch; then
+            echo "ERROR: Patch 0002 does not contain legacy uppercase board-name support."
+            exit 1
+          fi
+
+          if ! grep -q 'totolink,x30' patches/0002-mediatek-filogic-add-totolink-x30-fit-upgrade.patch; then
+            echo "ERROR: Patch 0002 does not contain normalized lowercase board-name support."
+            exit 1
+          fi
+
       - name: Resolve latest OpenWrt release
         id: openwrt_release
         env:
@@ -184,6 +209,7 @@ jobs:
             ../config/x30.config \
             ../patches/0001-mediatek-add-TOTOLINK-X30-support.patch \
             ../patches/0002-mediatek-filogic-add-totolink-x30-fit-upgrade.patch \
+            ../.github/workflows/build-x30-25.12.yml \
             | sha256sum | cut -c1-12)"
 
           echo "upstream_sha=${UPSTREAM_SHA}" >> "$GITHUB_OUTPUT"
@@ -209,8 +235,15 @@ jobs:
           echo "Verifying X30 image profile"
           grep -n "Device/totolink_X30" target/linux/mediatek/image/filogic.mk
           grep -n "TARGET_DEVICES += totolink_X30" target/linux/mediatek/image/filogic.mk
+          grep -n "SUPPORTED_DEVICES := .*totolink,X30.*totolink,x30" target/linux/mediatek/image/filogic.mk
 
-          echo "Verifying X30 FIT upgrade handler"
+          echo "Verifying normalized X30 board name and rootdisk"
+          grep -n 'compatible = "totolink,x30", "mediatek,mt7981";' target/linux/mediatek/dts/mt7981b-totolink-X30.dts
+          grep -n 'rootdisk = <&ubi_rootdisk>;' target/linux/mediatek/dts/mt7981b-totolink-X30.dts
+          grep -n 'volname = "fit";' target/linux/mediatek/dts/mt7981b-totolink-X30.dts
+
+          echo "Verifying X30 FIT upgrade handlers"
+          grep -n "totolink,X30" target/linux/mediatek/filogic/base-files/lib/upgrade/platform.sh
           grep -n "totolink,x30" target/linux/mediatek/filogic/base-files/lib/upgrade/platform.sh
 
           TAG="x30-${OPENWRT_VERSION}-${UPSTREAM_SHA}-${PATCH_ID}-${CONFIG_HASH}"
@@ -341,6 +374,20 @@ jobs:
           fi
           echo "Found sysupgrade image: ${SYSUPGRADE_IMAGE}"
 
+          FWTOOL="$(find ../openwrt/staging_dir -path '*/bin/fwtool' -type f | sort | head -n 1)"
+          if [ -z "${FWTOOL}" ] || [ ! -x "${FWTOOL}" ]; then
+            echo "ERROR: Could not find host fwtool to validate sysupgrade metadata."
+            exit 1
+          fi
+
+          "${FWTOOL}" -q -i x30-sysupgrade.meta.json "${SYSUPGRADE_IMAGE}"
+
+          echo "Sysupgrade metadata:"
+          cat x30-sysupgrade.meta.json
+
+          jq -e '.supported_devices | index("totolink,X30")' x30-sysupgrade.meta.json >/dev/null
+          jq -e '.supported_devices | index("totolink,x30")' x30-sysupgrade.meta.json >/dev/null
+
           X30_MANIFEST="$(find . -maxdepth 1 -type f \( -iname '*x30*.manifest' -o -iname '*totolink*.manifest' \) | sort | head -n 1)"
           if [ -z "${X30_MANIFEST}" ]; then
             echo "ERROR: No X30/TOTOLINK manifest found."
@@ -409,13 +456,15 @@ jobs:
 
           Upstream OpenWrt release tag SHA: ${UPSTREAM_SHA}
           X30 patch: ${PATCH_ID}
-          Build config/patch hash: ${CONFIG_HASH}
+          Build config/patch/workflow hash: ${CONFIG_HASH}
           Target: mediatek/filogic
           Device profile: totolink_X30
 
           This build includes:
           - TOTOLINK X30 board support
           - TOTOLINK X30 FIT sysupgrade platform handler
+          - Legacy board-name compatibility for totolink,X30
+          - Normalized board-name compatibility for totolink,x30
           - kmod-tun
           - tailscale
           - ca-bundle
