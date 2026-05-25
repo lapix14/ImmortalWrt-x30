@@ -1,4 +1,4 @@
-name: Build TOTOLINK X30 OpenWrt 25.12
+name: Build TOTOLINK X30 OpenWrt latest release
 
 on:
   workflow_dispatch:
@@ -16,11 +16,10 @@ permissions:
   contents: write
 
 concurrency:
-  group: x30-openwrt-25.12
+  group: x30-openwrt-latest-release
   cancel-in-progress: false
 
 env:
-  OPENWRT_REF: v25.12.3
   X30_PATCH_COMMIT: 1e4bed859aeb3c7047ee602866d833efed853e2d
   BUILD_JOBS: 2
 
@@ -38,6 +37,82 @@ jobs:
         run: |
           set -euo pipefail
           find . -maxdepth 3 -type f | sort
+
+      - name: Validate builder inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          required_files=(
+            config/x30.config
+            patches/0001-mediatek-add-TOTOLINK-X30-support.patch
+            patches/0002-mediatek-filogic-add-totolink-x30-fit-upgrade.patch
+          )
+
+          for file in "${required_files[@]}"; do
+            if [ ! -s "${file}" ]; then
+              echo "ERROR: Required builder input is missing or empty: ${file}"
+              exit 1
+            fi
+          done
+
+          required_config_symbols=(
+            CONFIG_TARGET_mediatek=y
+            CONFIG_TARGET_mediatek_filogic=y
+            CONFIG_TARGET_mediatek_filogic_DEVICE_totolink_X30=y
+            CONFIG_PACKAGE_luci=y
+            CONFIG_PACKAGE_luci-ssl=y
+            CONFIG_PACKAGE_kmod-tun=y
+            CONFIG_PACKAGE_tailscale=y
+            CONFIG_PACKAGE_ca-bundle=y
+          )
+
+          for symbol in "${required_config_symbols[@]}"; do
+            if ! grep -Fxq "${symbol}" config/x30.config; then
+              echo "ERROR: Required line is missing from config/x30.config: ${symbol}"
+              exit 1
+            fi
+          done
+
+      - name: Resolve latest OpenWrt release
+        id: openwrt_release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if ! command -v gh >/dev/null 2>&1; then
+            echo "ERROR: GitHub CLI is not available on this runner."
+            exit 1
+          fi
+
+          OPENWRT_REF="$(gh api repos/openwrt/openwrt/releases/latest --jq '.tag_name')"
+
+          if [ -z "${OPENWRT_REF}" ] || [ "${OPENWRT_REF}" = "null" ]; then
+            echo "ERROR: Could not resolve latest OpenWrt release tag."
+            exit 1
+          fi
+
+          if ! [[ "${OPENWRT_REF}" =~ ^v[0-9]+[.][0-9]+([.][0-9]+)?$ ]]; then
+            echo "ERROR: Unexpected OpenWrt release tag format: ${OPENWRT_REF}"
+            exit 1
+          fi
+
+          if ! git ls-remote --exit-code --tags https://github.com/openwrt/openwrt.git "refs/tags/${OPENWRT_REF}" >/dev/null 2>&1; then
+            echo "ERROR: Latest release tag does not exist in openwrt/openwrt git refs: ${OPENWRT_REF}"
+            exit 1
+          fi
+
+          OPENWRT_VERSION="${OPENWRT_REF#v}"
+
+          echo "Latest OpenWrt release: ${OPENWRT_REF}"
+          echo "OpenWrt version: ${OPENWRT_VERSION}"
+
+          echo "openwrt_ref=${OPENWRT_REF}" >> "$GITHUB_OUTPUT"
+          echo "openwrt_version=${OPENWRT_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "OPENWRT_REF=${OPENWRT_REF}" >> "$GITHUB_ENV"
+          echo "OPENWRT_VERSION=${OPENWRT_VERSION}" >> "$GITHUB_ENV"
 
       - name: Free disk space
         shell: bash
@@ -64,6 +139,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+
+          if [ -z "${OPENWRT_REF:-}" ]; then
+            echo "ERROR: OPENWRT_REF was not set by the release resolver step."
+            exit 1
+          fi
+
           git clone \
             --branch "${OPENWRT_REF}" \
             --single-branch \
@@ -85,6 +166,19 @@ jobs:
           git config user.name "x30-builder"
           git config user.email "x30-builder@example.invalid"
 
+          required_openwrt_paths=(
+            target/linux/mediatek/image/filogic.mk
+            target/linux/mediatek/filogic/base-files/lib/upgrade/platform.sh
+          )
+
+          for path in "${required_openwrt_paths[@]}"; do
+            if [ ! -f "${path}" ]; then
+              echo "ERROR: Expected OpenWrt path is missing in ${OPENWRT_REF}: ${path}"
+              echo "The latest release may have moved files that this builder patches."
+              exit 1
+            fi
+          done
+
           UPSTREAM_SHA="$(git rev-parse --short=12 HEAD)"
           CONFIG_HASH="$(sha256sum \
             ../config/x30.config \
@@ -94,6 +188,7 @@ jobs:
 
           echo "upstream_sha=${UPSTREAM_SHA}" >> "$GITHUB_OUTPUT"
           echo "config_hash=${CONFIG_HASH}" >> "$GITHUB_OUTPUT"
+          echo "openwrt_version=${OPENWRT_VERSION}" >> "$GITHUB_OUTPUT"
 
           if grep -q "Device/totolink_X30" target/linux/mediatek/image/filogic.mk; then
             echo "X30 image profile already exists in ${OPENWRT_REF}; not applying profile patch."
@@ -118,7 +213,7 @@ jobs:
           echo "Verifying X30 FIT upgrade handler"
           grep -n "totolink,x30" target/linux/mediatek/filogic/base-files/lib/upgrade/platform.sh
 
-          TAG="x30-25.12.3-${UPSTREAM_SHA}-${PATCH_ID}-${CONFIG_HASH}"
+          TAG="x30-${OPENWRT_VERSION}-${UPSTREAM_SHA}-${PATCH_ID}-${CONFIG_HASH}"
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
           echo "patch_id=${PATCH_ID}" >> "$GITHUB_OUTPUT"
 
@@ -290,7 +385,7 @@ jobs:
         if: steps.prep.outputs.skip_build != 'true'
         uses: actions/upload-artifact@v7
         with:
-          name: openwrt-totolink-x30-25.12
+          name: openwrt-totolink-x30-${{ steps.openwrt_release.outputs.openwrt_version }}
           path: out/*
           if-no-files-found: error
 
@@ -299,6 +394,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.prep.outputs.tag }}
+          OPENWRT_REF: ${{ steps.openwrt_release.outputs.openwrt_ref }}
+          OPENWRT_VERSION: ${{ steps.openwrt_release.outputs.openwrt_version }}
           UPSTREAM_SHA: ${{ steps.prep.outputs.upstream_sha }}
           PATCH_ID: ${{ steps.prep.outputs.patch_id }}
           CONFIG_HASH: ${{ steps.prep.outputs.config_hash }}
@@ -307,7 +404,7 @@ jobs:
           set -euo pipefail
 
           gh release create "${TAG}" out/* \
-            --title "TOTOLINK X30 OpenWrt 25.12.3 build ${TAG}" \
+            --title "TOTOLINK X30 OpenWrt ${OPENWRT_VERSION} build ${TAG}" \
             --notes "Custom TOTOLINK X30 build from OpenWrt ${OPENWRT_REF}.
 
           Upstream OpenWrt release tag SHA: ${UPSTREAM_SHA}
