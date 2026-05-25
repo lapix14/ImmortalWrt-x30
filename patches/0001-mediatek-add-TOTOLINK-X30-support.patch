@@ -113,7 +113,7 @@ index 00000000000000..0dce69d0038fa5
 ++		wps {
 ++			label = "wps";
 ++			gpios = <&pio 0 GPIO_ACTIVE_LOW>;
-++			inux,code = <KEY_WPS_BUTTON>;
+++			linux,code = <KEY_WPS_BUTTON>;
 ++		};
 ++	};
 ++
@@ -443,7 +443,7 @@ index 00000000000000..1b8e51027ca493
 +
 +/ {
 +	model = "TOTOLINK X30";
-+	compatible = "totolink,X30", "mediatek,mt7981";
++	compatible = "totolink,x30", "mediatek,mt7981";
 +
 +	aliases {
 +		label-mac-device = &gmac0;
@@ -748,6 +748,7 @@ index 490fb69afa0479..21c1fd36a6fb68 100644
 +define Device/totolink_X30
 +  DEVICE_VENDOR := TOTOLINK
 +  DEVICE_MODEL := X30
++  SUPPORTED_DEVICES := totolink,X30 totolink,x30
 +  DEVICE_DTS := mt7981b-totolink-X30
 +  DEVICE_DTS_DIR := ../dts
 +  DEVICE_PACKAGES := kmod-mt7915e kmod-mt7981-firmware mt7981-wo-firmware
