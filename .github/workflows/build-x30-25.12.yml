@@ -226,7 +226,8 @@ jobs:
           fi
 
           echo "Applying X30 FIT sysupgrade platform patch"
-          if grep -q "totolink,x30" target/linux/mediatek/filogic/base-files/lib/upgrade/platform.sh; then
+          if grep -q "totolink,X30" target/linux/mediatek/filogic/base-files/lib/upgrade/platform.sh && \
+             grep -q "totolink,x30" target/linux/mediatek/filogic/base-files/lib/upgrade/platform.sh; then
             echo "X30 FIT sysupgrade handler already exists; not applying local platform patch."
           else
             git apply "../patches/0002-mediatek-filogic-add-totolink-x30-fit-upgrade.patch"
