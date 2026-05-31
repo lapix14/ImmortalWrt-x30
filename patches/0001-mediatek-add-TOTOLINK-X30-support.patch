@@ -755,7 +755,6 @@ index 490fb69afa0479..21c1fd36a6fb68 100644
 +  UBINIZE_OPTS := -E 5
 +  BLOCKSIZE := 128k
 +  PAGESIZE := 2048
-+  KERNEL_IN_UBI := 1
 +  UBOOTENV_IN_UBI := 1
 +  IMAGES := factory.bin sysupgrade.bin
 +  KERNEL_INITRAMFS_SUFFIX := -recovery.bin
