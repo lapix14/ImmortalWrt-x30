@@ -741,7 +741,7 @@ diff --git a/target/linux/mediatek/image/filogic.mk b/target/linux/mediatek/imag
 index 490fb69afa0479..21c1fd36a6fb68 100644
 --- a/target/linux/mediatek/image/filogic.mk
 +++ b/target/linux/mediatek/image/filogic.mk
-@@ -2474,6 +2474,31 @@ define Device/totolink_x6000r
+@@ -2474,6 +2474,30 @@ define Device/totolink_x6000r
  endef
  TARGET_DEVICES += totolink_x6000r
  
