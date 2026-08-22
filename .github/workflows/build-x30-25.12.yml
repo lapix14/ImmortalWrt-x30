@@ -287,7 +287,7 @@ jobs:
           for symbol in "${required_config_symbols[@]}"; do
             if ! grep -q "^${symbol}=y" .config; then
               echo "ERROR: Required symbol ${symbol}=y was not selected after make defconfig."
-              grep -Ei 'x30|totolink|tailscale|kmod-tun|ca-bundle|tun' .config || true
+              grep -Ei 'x30|totolink|kmod-sched|kmod-veth|netem|ctinfo|sched-red|ifb|cake|tc-full|ip-full|jq|lua' .config || true
               exit 1
             fi
           done
@@ -391,9 +391,19 @@ jobs:
           echo "Found X30 manifest: ${X30_MANIFEST}"
 
           required_manifest_packages=(
-            kmod-tun
-            tailscale
-            ca-bundle
+            kmod-sched
+            kmod-veth
+            kmod-netem
+            kmod-sched-ctinfo
+            kmod-sched-red
+            kmod-ifb
+            kmod-sched-cake
+            tc-full
+            ip-full
+            jq
+            luci-lib-jsonc
+            lua
+            coreutils-sleep
           )
 
           for package in "${required_manifest_packages[@]}"; do
@@ -406,7 +416,7 @@ jobs:
           done
 
           echo "Required manifest packages found:"
-          grep -E '^(kmod-tun|tailscale|ca-bundle)( |$)' "${X30_MANIFEST}"
+          grep -E '^(kmod-sched|kmod-veth|kmod-netem|kmod-sched-ctinfo|kmod-sched-red|kmod-ifb|kmod-sched-cake|tc-full|ip-full|jq|luci-lib-jsonc|lua|coreutils-sleep)( |$)' "${X30_MANIFEST}"
 
       - name: Upload diagnostics on failure
         if: failure()
@@ -460,9 +470,9 @@ jobs:
           - TOTOLINK X30 FIT sysupgrade platform handler
           - Legacy board-name compatibility for totolink,X30
           - Normalized board-name compatibility for totolink,x30
-          - kmod-tun
-          - tailscale
-          - ca-bundle
+          - QoSmate kernel and userspace dependencies
+          - CAKE / IFB traffic control support
+
 
           Routine upgrades should use only:
           openwrt-mediatek-filogic-totolink_X30-squashfs-sysupgrade.bin
