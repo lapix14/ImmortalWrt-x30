@@ -167,7 +167,7 @@ jobs:
 
           for path in "${required_openwrt_paths[@]}"; do
             if [ ! -f "${path}" ]; then
-              echo "ERROR: Expected OpenWrt path is missing in ${OPENWRT_REF}: ${path}"
+              echo "ERROR: Expected ImmortalWrt path is missing in ${IMMORTALWRT_REF}: ${path}"
               echo "The latest release may have moved files that this builder patches."
               exit 1
             fi
@@ -183,10 +183,10 @@ jobs:
 
           echo "upstream_sha=${UPSTREAM_SHA}" >> "$GITHUB_OUTPUT"
           echo "config_hash=${CONFIG_HASH}" >> "$GITHUB_OUTPUT"
-          echo "openwrt_version=${OPENWRT_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "immortalwrt_version=${IMMORTALWRT_VERSION}" >> "$GITHUB_OUTPUT"
 
           if grep -q "Device/totolink_X30" target/linux/mediatek/image/filogic.mk; then
-            echo "X30 image profile already exists in ${OPENWRT_REF}; not applying profile patch."
+            echo "X30 image profile already exists in ${IMMORTALWRT_REF}; not applying profile patch."
             PATCH_ID="official"
           else
             echo "Applying pinned X30 board-support patch: ${X30_PATCH_COMMIT}"
@@ -216,7 +216,7 @@ jobs:
           grep -n "totolink,X30" target/linux/mediatek/filogic/base-files/lib/upgrade/platform.sh
           grep -n "totolink,x30" target/linux/mediatek/filogic/base-files/lib/upgrade/platform.sh
 
-          TAG="x30-${OPENWRT_VERSION}-${UPSTREAM_SHA}-${PATCH_ID}-${CONFIG_HASH}"
+          TAG="x30-${IMMORTALWRT_VERSION}-${UPSTREAM_SHA}-${PATCH_ID}-${CONFIG_HASH}"
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
           echo "patch_id=${PATCH_ID}" >> "$GITHUB_OUTPUT"
 
