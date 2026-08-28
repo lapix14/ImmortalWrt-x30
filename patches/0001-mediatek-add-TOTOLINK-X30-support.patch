@@ -479,7 +479,7 @@ index 00000000000000..1b8e51027ca493
 +			label = "wlan2g";
 +			function = LED_FUNCTION_WLAN_2GHZ;
 +            color = <LED_COLOR_ID_BLUE>;
-+            gpios = <&pio 35 GPIO_ACTIVE_LOW>;
++            gpios = <&pio 34 GPIO_ACTIVE_LOW>;
 +			linux,default-trigger = "phy0tpt";
 +        };
 +
@@ -487,7 +487,7 @@ index 00000000000000..1b8e51027ca493
 +			label = "wlan5g";
 +			function = LED_FUNCTION_WLAN_5GHZ;
 +            color = <LED_COLOR_ID_BLUE>;
-+            gpios = <&pio 34 GPIO_ACTIVE_LOW>;
++            gpios = <&pio 35 GPIO_ACTIVE_LOW>;
 +			linux,default-trigger = "phy1tpt";
 +        };
 +
