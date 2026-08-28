@@ -28,5 +28,3 @@ For routine firmware upgrades, **do not flash**:
 - `bl31-uboot.fip`
 
 These files are bootloader-related and are not required for a normal sysupgrade.
-
-The `initramfs-recovery.bin` image is intended for recovery or RAM boot scenarios, not routine upgrades.
