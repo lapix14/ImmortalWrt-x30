@@ -1,4 +1,4 @@
-name: Build TOTOLINK X30 OpenWrt latest release
+name: Build TOTOLINK X30 ImmortalWrt
 
 on:
   workflow_dispatch:
@@ -16,7 +16,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: x30-openwrt-latest-release
+  group: x30-immortalwrt-release
   cancel-in-progress: false
 
 env:
@@ -263,10 +263,10 @@ jobs:
             fi
           done
 
-          echo "OpenWrt diffconfig:"
+          echo "ImmortalWrt diffconfig:"
           ./scripts/diffconfig.sh
 
-          echo "OpenWrt make info entries matching x30/totolink:"
+          echo "ImmortalWrt make info entries matching x30/totolink:"
           make info | grep -Ei 'x30|totolink' || true
 
       - name: Download sources
@@ -325,8 +325,8 @@ jobs:
           done
 
           ./scripts/diffconfig.sh > ../out/x30.diffconfig
-          git rev-parse HEAD > ../out/openwrt-git-head.txt
-          git log -1 --oneline > ../out/openwrt-git-log.txt
+          git rev-parse HEAD > ../out/immortalwrt-git-head.txt
+          git log -1 --oneline > ../out/immortalwrt-git-log.txt
           cp ../x30-artifact-list.txt ../out/x30-artifact-list.txt
 
           cd ../out
@@ -381,7 +381,7 @@ jobs:
         if: steps.prep.outputs.skip_build != 'true'
         uses: actions/upload-artifact@v7
         with:
-          name: openwrt-totolink-x30-${{ steps.openwrt_release.outputs.openwrt_version }}
+          name: immortalwrt-totolink-x30-${{ env.IMMORTALWRT_VERSION }}
           path: out/*
           if-no-files-found: error
 
@@ -390,8 +390,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.prep.outputs.tag }}
-          OPENWRT_REF: ${{ steps.openwrt_release.outputs.openwrt_ref }}
-          OPENWRT_VERSION: ${{ steps.openwrt_release.outputs.openwrt_version }}
+          IMMORTALWRT_REF: ${{ env.IMMORTALWRT_REF }}
+          IMMORTALWRT_VERSION: ${{ env.IMMORTALWRT_VERSION }}
           UPSTREAM_SHA: ${{ steps.prep.outputs.upstream_sha }}
           PATCH_ID: ${{ steps.prep.outputs.patch_id }}
           CONFIG_HASH: ${{ steps.prep.outputs.config_hash }}
@@ -400,10 +400,10 @@ jobs:
           set -euo pipefail
 
           gh release create "${TAG}" out/* \
-            --title "TOTOLINK X30 OpenWrt ${OPENWRT_VERSION} build ${TAG}" \
-            --notes "Custom TOTOLINK X30 build from OpenWrt ${OPENWRT_REF}.
+            --title "TOTOLINK X30 ImmortalWrt ${IMMORTALWRT_VERSION} build ${TAG}" \
+            --notes "Custom TOTOLINK X30 build from ImmortalWrt ${IMMORTALWRT_REF}.
 
-          Upstream OpenWrt release tag SHA: ${UPSTREAM_SHA}
+          Upstream ImmortalWrt source SHA: ${UPSTREAM_SHA}
           X30 patch: ${PATCH_ID}
           Build config/patch/workflow hash: ${CONFIG_HASH}
           Target: mediatek/filogic
@@ -417,6 +417,6 @@ jobs:
 
 
           Routine upgrades should use only:
-          openwrt-mediatek-filogic-totolink_X30-squashfs-sysupgrade.bin
+          immortalwrt-mediatek-filogic-totolink_X30-squashfs-sysupgrade.bin
 
           Do not flash preloader.bin or bl31-uboot.fip for routine upgrades."
