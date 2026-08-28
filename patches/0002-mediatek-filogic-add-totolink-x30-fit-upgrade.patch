@@ -1,7 +1,7 @@
 diff --git a/target/linux/mediatek/filogic/base-files/lib/upgrade/platform.sh b/target/linux/mediatek/filogic/base-files/lib/upgrade/platform.sh
 --- a/target/linux/mediatek/filogic/base-files/lib/upgrade/platform.sh
 +++ b/target/linux/mediatek/filogic/base-files/lib/upgrade/platform.sh
-@@ -142,6 +142,8 @@ platform_do_upgrade() {
+@@ -142,7 +142,9 @@ platform_do_upgrade() {
  	tplink,tl-xdr4288|\
  	tplink,tl-xdr6086|\
  	tplink,tl-xdr6088|\
@@ -11,7 +11,7 @@ diff --git a/target/linux/mediatek/filogic/base-files/lib/upgrade/platform.sh b/
  	xiaomi,mi-router-ax3000t-ubootmod|\
  	xiaomi,redmi-router-ax6000-ubootmod|\
  	xiaomi,mi-router-wr30u-ubootmod|\
-@@ -348,6 +350,8 @@ platform_check_image() {
+@@ -348,7 +350,9 @@ platform_check_image() {
  	tplink,tl-xdr4288|\
  	tplink,tl-xdr6086|\
  	tplink,tl-xdr6088|\
