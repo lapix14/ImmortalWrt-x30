@@ -98,17 +98,17 @@ jobs:
 
       - name: Set ImmortalWrt stable release
         shell: bash
-  run: |
-    set -euo pipefail
+        run: |
+          set -euo pipefail
 
-    IMMORTALWRT_VERSION="25.12.1"
-    IMMORTALWRT_REF="openwrt-25.12"
+          IMMORTALWRT_VERSION="25.12.1"
+          IMMORTALWRT_REF="openwrt-25.12"
 
-    echo "ImmortalWrt version: ${IMMORTALWRT_VERSION}"
-    echo "ImmortalWrt branch: ${IMMORTALWRT_REF}"
+          echo "ImmortalWrt version: ${IMMORTALWRT_VERSION}"
+          echo "ImmortalWrt branch: ${IMMORTALWRT_REF}"
 
-    echo "IMMORTALWRT_VERSION=${IMMORTALWRT_VERSION}" >> "$GITHUB_ENV"
-    echo "IMMORTALWRT_REF=${IMMORTALWRT_REF}" >> "$GITHUB_ENV"
+          echo "IMMORTALWRT_VERSION=${IMMORTALWRT_VERSION}" >> "$GITHUB_ENV"
+          echo "IMMORTALWRT_REF=${IMMORTALWRT_REF}" >> "$GITHUB_ENV"
 
       - name: Free disk space
         shell: bash
@@ -131,23 +131,24 @@ jobs:
             python3 python3-pyelftools python3-setuptools \
             rsync swig unzip zlib1g-dev file wget curl time jq
 
-       - name: Clone ImmortalWrt
-  shell: bash
-  run: |
-    set -euo pipefail
 
-    git clone \
-      --branch "${IMMORTALWRT_REF}" \
-      --single-branch \
-      https://github.com/immortalwrt/immortalwrt.git openwrt
+      - name: Clone ImmortalWrt
+        shell: bash
+        run: |
+          set -euo pipefail
 
-    cd openwrt
+          git clone \
+            --branch "${IMMORTALWRT_REF}" \
+            --single-branch \
+            https://github.com/immortalwrt/immortalwrt.git openwrt
 
-    echo "ImmortalWrt branch:"
-    git branch --show-current
+          cd openwrt
 
-    echo "ImmortalWrt HEAD:"
-    git log -1 --oneline
+          echo "ImmortalWrt branch:"
+          git branch --show-current
+
+          echo "ImmortalWrt HEAD:"
+          git log -1 --oneline
 
       - name: Prepare X30 source tree
         id: prep
