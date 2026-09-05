@@ -132,12 +132,12 @@ index 00000000000000..0dce69d0038fa5
 ++		
 ++		wlan2 {
 ++			label = "wlan2";
-++			gpios = <&pio 35 GPIO_ACTIVE_LOW>;
+++			gpios = <&pio 34 GPIO_ACTIVE_LOW>;
 ++		};
 ++
 ++		wlan5 {
 ++			label = "wlan5";
-++			gpios = <&pio 34 GPIO_ACTIVE_LOW>;
+++			gpios = <&pio 35 GPIO_ACTIVE_LOW>;
 ++		};
 ++		
 ++		usb {
@@ -733,7 +733,7 @@ index 00000000000000..1b8e51027ca493
 +
 +	band@1 {
 +		reg = <1>;
-+		nvmem-cells = <&macaddr_factory_4 0>;
++		nvmem-cells = <&macaddr_factory_4 4>;
 +		nvmem-cell-names = "mac-address";
 +	};
 +};
